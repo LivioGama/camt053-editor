@@ -1,0 +1,28 @@
+{
+  "name": "playground",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/speech": "^6.7.0",
+    "dotenv": "^16.4.5",
+    "elevenlabs": "^0.6.0",
+    "imagekit": "^5.0.1",
+    "log4node": "^0.1.6",
+    "openai": "^4.57.0",
+    "pocketbase": "^0.21.2"
+  },
+  "devDependencies": {
+    "eslint": "^9.3.0",
+    "eslint-config-next": "^14.2.3",
+    "eslint-plugin-prefer-arrow-functions": "^3.3.2",
+    "next": "^14.2.3",
+    "prettier": "^3.2.5"
+  }
+}

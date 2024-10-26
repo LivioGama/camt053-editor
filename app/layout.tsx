@@ -1,7 +1,7 @@
 import {Provider} from '@/components/ui/provider'
 import './globals.css'
 
-export default ({
+const RootLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode
@@ -12,3 +12,5 @@ export default ({
     </body>
   </html>
 )
+
+export default RootLayout
