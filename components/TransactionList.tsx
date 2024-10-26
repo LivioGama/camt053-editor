@@ -1,3 +1,4 @@
+import {HeaderStats} from '@/components/HeaderStats'
 import {RevenuesChart} from '@/components/RevenuesChart'
 import {SimilarTransactions} from '@/components/SimilarTransactions'
 import {TransactionCell} from '@/components/TransactionCell'
@@ -9,12 +10,12 @@ import {format} from '@/utils/formatter'
 import {
   Badge,
   Box,
-  Flex,
   Heading,
   HStack,
   IconButton,
-  Input,
   Separator,
+  Stack,
+  useBreakpointValue,
   VStack,
 } from '@chakra-ui/react'
 import groupBy from 'lodash/groupBy'
@@ -34,6 +35,7 @@ const TransactionList = () => {
     projectedRevenue,
     setProjectedRevenue,
   } = store()
+  const isMobile = useBreakpointValue({base: true, md: false})
 
   const filteredTransactions = useMemo(
     () =>
@@ -64,119 +66,81 @@ const TransactionList = () => {
   return (
     <Box w='full'>
       <SimilarTransactions transactions={transactions} showOnlyCredit={showOnlyCredit} />
-      <HStack justifyContent='space-around'>
-        <VStack align='stretch' gap={4}>
-          <Heading size='lg' mb={4}>
-            Current credit:{' '}
-            <Badge variant='solid' size='lg' colorPalette='green'>
-              {format(
-                sumBy(
-                  transactions.filter(t => t.type === 'debit'),
-                  'amount',
-                ),
-                'CHF',
-              )}
-            </Badge>{' '}
-            Annual projection:{' '}
-            <Input
-              type='number'
-              value={projectedRevenue}
-              onChange={e => setProjectedRevenue(Number(e.target.value))}
-              width='150px'
-              mr={2}
-            />
-            <Badge variant='solid' size='lg' colorPalette='green'>
-              {format(
-                sumBy(
-                  transactions.filter(t => t.type === 'debit'),
-                  'amount',
-                ) + projectedRevenue,
-                'CHF',
-              )}
-            </Badge>
-          </Heading>
-          <Heading size='lg' mb={4}>
-            Current debit:{' '}
-            <Badge variant='solid' size='lg' colorPalette='red'>
-              {format(
-                sumBy(
-                  transactions.filter(t => t.type === 'credit'),
-                  'amount',
-                ),
-                'CHF',
-              )}
-            </Badge>
-          </Heading>
-        </VStack>
-        <Heading size='lg' mb={4}>
-          {transactions.length} transactions
-        </Heading>
-      </HStack>
+      <HeaderStats
+        transactions={transactions}
+        value={projectedRevenue}
+        onChange={e => setProjectedRevenue(Number(e.target.value))}
+      />
       <RevenuesChart transactions={transactions} />
       <Switch mb={4} checked={showOnlyCredit} onCheckedChange={toggleShowOnlyCredit}>
         Show only credit
       </Switch>
+      <Separator />
 
       {sortedGroupedTransactions.map(([monthYear, transactions]) => (
         <Box key={monthYear} mb={6} borderRadius='lg' border='dashed 3px lightgray' p={5}>
           <Separator />
-          <Flex
+          <Stack
             justifyContent='space-between'
             alignItems='center'
             p={6}
             bg='gray.900'
             mb={4}
             borderRadius='lg'>
-            <Flex alignItems='center' gap={4}>
-              <Heading size='lg' textAlign='center'>
-                {monthYear}
-              </Heading>
-              <Badge>{transactions.length} transactions</Badge>
-              <Badge variant='solid' size='lg' colorPalette='green'>
-                {format(
-                  sumBy(
-                    transactions.filter(t => t.type === 'debit'),
-                    'amount',
-                  ),
-                  'CHF',
-                )}
-              </Badge>
-              <Badge variant='solid' size='lg' colorPalette='red'>
-                {format(
-                  sumBy(
-                    transactions.filter(t => t.type === 'credit'),
-                    'amount',
-                  ),
-                  'CHF',
-                )}
-              </Badge>
-            </Flex>
-            <HStack gap={4}>
-              <Switch
-                ml={4}
-                checked={treatedMonths.includes(monthYear)}
-                onCheckedChange={() => handleToggleTreatedMonth(monthYear)}>
-                Treated
-              </Switch>
-              <IconButton
-                colorPalette='red'
-                aria-label='Delete All'
-                onClick={async () => {
-                  if (
-                    window.confirm(
-                      `Are you sure you want to delete all transactions for ${monthYear}?`,
-                    )
-                  ) {
-                    const transactionIds = transactions.map(t => t.id)
-                    await removeMultipleTransactions(transactionIds)
-                  }
-                }}
-                colorScheme='red'
-                size='sm'>
-                <AiOutlineDelete />
-              </IconButton>
-            </HStack>
-          </Flex>
+            <Stack flexDirection={{base: 'column', md: 'row'}} alignItems='center' gap={4} w='full'>
+              <Heading size={{base: 'sm', md: 'lg'}}>{monthYear}</Heading>
+              <HStack w='full'>
+                <HStack gap={{base: 2, md: 4}} w='full' alignItems='stretch'>
+                  <Stack flexDirection={{base: 'column', md: 'row'}}>
+                    <Badge>{transactions.length} transactions</Badge>
+                    <Badge variant='solid' size={{base: 'sm', md: 'lg'}} colorPalette='green'>
+                      {format(
+                        sumBy(
+                          transactions.filter(t => t.type === 'debit'),
+                          'amount',
+                        ),
+                        'CHF',
+                      )}
+                    </Badge>
+                    <Badge variant='solid' size={{base: 'sm', md: 'lg'}} colorPalette='red'>
+                      {format(
+                        sumBy(
+                          transactions.filter(t => t.type === 'credit'),
+                          'amount',
+                        ),
+                        'CHF',
+                      )}
+                    </Badge>
+                  </Stack>
+                </HStack>
+                <Stack flexDirection={{base: 'column', md: 'row'}} gap={4}>
+                  <Switch
+                    ml={4}
+                    checked={treatedMonths.includes(monthYear)}
+                    onCheckedChange={() => handleToggleTreatedMonth(monthYear)}>
+                    Treated
+                  </Switch>
+                  <IconButton
+                    colorPalette='red'
+                    aria-label='Delete All'
+                    onClick={async () => {
+                      if (
+                        window.confirm(
+                          `Are you sure you want to delete all transactions for ${monthYear}?`,
+                        )
+                      ) {
+                        const transactionIds = transactions.map(t => t.id)
+                        await removeMultipleTransactions(transactionIds)
+                      }
+                    }}
+                    colorScheme='red'
+                    size='sm'>
+                    <AiOutlineDelete />
+                  </IconButton>
+                </Stack>
+              </HStack>
+            </Stack>
+          </Stack>
           {!treatedMonths.includes(monthYear) && (
             <VStack gap={4} align='stretch'>
               {transactions.map((transaction: Transaction) => (

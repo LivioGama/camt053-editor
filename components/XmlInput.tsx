@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import {useCamt053} from '@/hooks/useCamt053'
 import {sampleXml} from '@/sample-camt.053'
-import {HStack, Textarea} from '@chakra-ui/react'
+import {Stack, Textarea} from '@chakra-ui/react'
 import isEmpty from 'lodash/isEmpty'
 import {useState} from 'react'
 
@@ -34,7 +34,7 @@ const XmlInput = () => {
 
   return (
     <>
-      <HStack gap={5} w='full' alignItems='stretch'>
+      <Stack flexDirection={{base: 'column', md: 'row'}} gap={5} w='full' alignItems='stretch'>
         <Textarea
           flex={1}
           onChange={e => setXmlContent(e.target.value)}
@@ -44,7 +44,7 @@ const XmlInput = () => {
         <Button variant='outline' onClick={handleUseExample}>
           Use example
         </Button>
-      </HStack>
+      </Stack>
 
       <DialogRoot open={isDialogOpen} onOpenChange={() => setIsDialogOpen(false)}>
         <DialogBackdrop />

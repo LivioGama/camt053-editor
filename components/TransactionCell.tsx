@@ -1,5 +1,5 @@
 import {format} from '@/utils/formatter'
-import {Badge, Box, Flex, HStack, IconButton, Text, VStack} from '@chakra-ui/react'
+import {Badge, Box, Flex, HStack, IconButton, Stack, Text, VStack} from '@chakra-ui/react'
 import dayjs from 'dayjs'
 import {AiOutlineDelete} from 'react-icons/ai'
 
@@ -26,7 +26,7 @@ export const TransactionCell = ({
             {dayjs(transaction.date).format('DD.MM.YYYY')}
           </Badge>
         </HStack>
-        <HStack>
+        <Stack flexDirection={{base: 'column', md: 'row'}}>
           <Text fontSize='sm' flexShrink={0}>
             {transaction.description_clean || transaction.description}
           </Text>
@@ -35,7 +35,7 @@ export const TransactionCell = ({
               {transaction.description}
             </Text>
           )}
-        </HStack>
+        </Stack>
       </VStack>
       <IconButton aria-label='Delete' onClick={onClick} colorPalette='red' size='sm'>
         <AiOutlineDelete />

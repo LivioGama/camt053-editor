@@ -6,10 +6,10 @@ import {Container, Heading, VStack} from '@chakra-ui/react'
 
 const Home = () => (
   <Container maxW='container.xl' py={8}>
-    <Heading mb={8} size='2xl' textAlign='center'>
+    <Heading mb={8} size='2xl' textAlign='center' mt={{base: 10, md: 0}}>
       CAMT.053 Editor
     </Heading>
-    <VStack gap={8}>
+    <VStack gap={5}>
       <XmlInput />
       <TransactionList />
       <DownloadButton />
