@@ -7,7 +7,7 @@ Example use case: You have a single bank account for personal and business expen
 
 ## 🚀 Try It Out!
 
-You can see the editor in action at [camt053-editor.liviogama.com](https://camt053-editor.liviogama.com/). Unfortunately, for now, it's still pointing to a local Pocketbase instance at [http://127.0.0.1:8090](http://127.0.0.1:8090) because the database is not deployed yet on a monolith (will be fixed soon).
+You can see the editor in action at [camt053-editor.liviogama.com](https://camt053-editor.liviogama.com/).
 
 ![Screenshot of the editor](https://github.com/liviogama/camt053-editor/blob/main/screenshot.webp?raw=true)
 
