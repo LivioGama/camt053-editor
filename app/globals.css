@@ -34,3 +34,67 @@ body {
     color-scheme: dark;
   }
 }
+
+/* Custom FilePond dark theme */
+.filepond--panel-root {
+  background-color: #1A202C !important;
+  border: 1px solid #333;
+}
+
+.filepond--drop-label {
+  color: #fff !important;
+}
+
+.filepond--label-action {
+  color: #2196f3 !important;
+}
+
+/* File item styling */
+.filepond--item-panel {
+  background-color: #333 !important;
+}
+
+/* Progress bar */
+.filepond--progress-indicator {
+  background: #2196f3 !important;
+}
+
+/* Remove button */
+.filepond--file-action-button {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  color: #fff !important;
+}
+
+/* Hover states */
+.filepond--file-action-button:hover {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+/* Active states */
+.filepond--drip {
+  background-color: #333 !important;
+}
+
+/* File info */
+.filepond--file-info {
+  color: #fff !important;
+}
+
+/* File status */
+.filepond--file-status {
+  color: #ccc !important;
+}
+
+/* Processing status */
+.filepond--processing-complete-indicator {
+  color: #00e676 !important;
+}
+
+/* Error status */
+.filepond--error-msg-label {
+  color: #ff1744 !important;
+}
+
+.filepond--credits {
+  display: none;
+}

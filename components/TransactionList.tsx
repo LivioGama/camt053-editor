@@ -5,7 +5,7 @@ import {TransactionCell} from '@/components/TransactionCell'
 import {Switch} from '@/components/ui/switch'
 import {useCamt053} from '@/hooks/useCamt053'
 import {Transaction} from '@/models/Transaction'
-import store from '@/store/store'
+import Store from '@/store/store'
 import {format} from '@/utils/formatter'
 import {
   Badge,
@@ -23,27 +23,34 @@ import sortBy from 'lodash/sortBy'
 import sumBy from 'lodash/sumBy'
 import {useCallback, useMemo} from 'react'
 import {AiOutlineDelete} from 'react-icons/ai'
+import {observer} from '@legendapp/state/react'
 
-const TransactionList = () => {
+const TransactionList = observer(() => {
   const {transactions, removeTransaction, removeMultipleTransactions} = useCamt053()
-  const {
-    showOnlyCredit,
-    toggleShowOnlyCredit,
-    treatedMonths,
-    markMonthAsTreated,
-    unmarkMonthAsTreated,
-    projectedRevenue,
-    setProjectedRevenue,
-  } = store()
+  const showOnlyCredit = Store.showOnlyCredit.get()
+  const limitToYear = Store.limitToYear.get()
+  const treatedMonths = Store.treatedMonths.get()
+  const projectedRevenue = Store.projectedRevenue.get()
   const isMobile = useBreakpointValue({base: true, md: false})
 
-  const filteredTransactions = useMemo(
+  const yearFilteredTransactions = useMemo(
     () =>
-      transactions.filter(transaction => (showOnlyCredit ? transaction.type === 'debit' : true)),
-    [transactions, showOnlyCredit],
+      transactions.filter(
+        transaction =>
+          !limitToYear || new Date(transaction.date).getFullYear() === new Date().getFullYear() - 1,
+      ),
+    [transactions, limitToYear],
   )
 
-  const groupedTransactions = groupBy(filteredTransactions, (transaction: Transaction) => {
+  const listFilteredTransactions = useMemo(
+    () =>
+      yearFilteredTransactions.filter(
+        transaction => !(showOnlyCredit && transaction.type !== 'debit'),
+      ),
+    [yearFilteredTransactions, showOnlyCredit],
+  )
+
+  const groupedTransactions = groupBy(listFilteredTransactions, (transaction: Transaction) => {
     const date = new Date(transaction.date)
     return `${date.toLocaleString('default', {month: 'long'})} ${date.getFullYear()}`
   }) as Record<string, Transaction[]>
@@ -55,26 +62,37 @@ const TransactionList = () => {
   const handleToggleTreatedMonth = useCallback(
     (monthYear: string) => {
       if (treatedMonths.includes(monthYear)) {
-        unmarkMonthAsTreated(monthYear)
+        Store.treatedMonths.$ = treatedMonths.filter(m => m !== monthYear)
       } else {
-        markMonthAsTreated(monthYear)
+        Store.treatedMonths.$ = [...treatedMonths, monthYear]
       }
     },
-    [treatedMonths, markMonthAsTreated, unmarkMonthAsTreated],
+    [treatedMonths],
   )
 
   return (
     <Box w='full'>
-      <SimilarTransactions transactions={transactions} showOnlyCredit={showOnlyCredit} />
-      <HeaderStats
-        transactions={transactions}
-        value={projectedRevenue}
-        onChange={e => setProjectedRevenue(Number(e.target.value))}
+      <SimilarTransactions
+        transactions={yearFilteredTransactions}
+        showOnlyCredit={showOnlyCredit}
       />
-      <RevenuesChart transactions={transactions} />
-      <Switch mb={4} checked={showOnlyCredit} onCheckedChange={toggleShowOnlyCredit}>
-        Show only credit
-      </Switch>
+      <HeaderStats
+        transactions={yearFilteredTransactions}
+        value={projectedRevenue}
+        onChange={e => (Store.projectedRevenue.$ = Number(e.target.value))}
+      />
+      <RevenuesChart transactions={yearFilteredTransactions} />
+      <HStack gap={4}>
+        <Switch mb={4} checked={limitToYear} onCheckedChange={() => Store.limitToYear.toggle()}>
+          Limit to the year
+        </Switch>
+        <Switch
+          mb={4}
+          checked={showOnlyCredit}
+          onCheckedChange={() => Store.showOnlyCredit.toggle()}>
+          Show only credit
+        </Switch>
+      </HStack>
       <Separator />
 
       {sortedGroupedTransactions.map(([monthYear, transactions]) => (
@@ -143,7 +161,7 @@ const TransactionList = () => {
           </Stack>
           {!treatedMonths.includes(monthYear) && (
             <VStack gap={4} align='stretch'>
-              {transactions.map((transaction: Transaction) => (
+              {sortBy(transactions, 'date').map((transaction: Transaction) => (
                 <TransactionCell
                   key={transaction.id}
                   transaction={transaction}
@@ -156,6 +174,6 @@ const TransactionList = () => {
       ))}
     </Box>
   )
-}
+})
 
 export default TransactionList

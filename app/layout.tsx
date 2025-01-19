@@ -1,5 +1,8 @@
 import {Provider} from '@/components/ui/provider'
 import './globals.css'
+import {enable$GetSet} from '@legendapp/state/config/enable$GetSet'
+
+enable$GetSet()
 
 const RootLayout = ({
   children,

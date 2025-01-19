@@ -27,7 +27,7 @@ export const TransactionCell = ({
           </Badge>
         </HStack>
         <Stack flexDirection={{base: 'column', md: 'row'}}>
-          <Text fontSize='sm' flexShrink={0}>
+          <Text fontSize='sm' flexShrink={1}>
             {transaction.description_clean || transaction.description}
           </Text>
           {transaction.description_clean && (

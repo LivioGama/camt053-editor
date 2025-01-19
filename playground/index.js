@@ -2,12 +2,15 @@ import pkg from 'lodash'
 import log4node from 'log4node'
 import ollama from 'ollama/browser'
 import PocketBase from 'pocketbase'
+import {config} from 'dotenv'
 
 const {isEmpty} = pkg
 
 const log = new log4node.Log4Node({level: 'debug', file: 'playground.log'})
 
-export const PB_URL = 'http://127.0.0.1:8090'
+config({path: '../.env'})
+
+export const PB_URL = process.env.NEXT_PUBLIC_PB_URL || 'http://127.0.0.1:8090'
 
 const pb = new PocketBase(PB_URL)
 
@@ -17,7 +20,7 @@ export default pb
 
 export const optimizeDescription = async description => {
   const response = await ollama.chat({
-    model: 'llama3',
+    model: 'llama3.3',
     stream: false,
     messages: [
       {
