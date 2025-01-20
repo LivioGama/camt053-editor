@@ -20,7 +20,7 @@ export default pb
 
 export const optimizeDescription = async description => {
   const response = await ollama.chat({
-    model: 'llama3.3',
+    model: 'mistral:7b',
     stream: false,
     messages: [
       {

@@ -17,6 +17,7 @@ import 'filepond/dist/filepond.min.css'
 import isEmpty from 'lodash/isEmpty'
 import {useRef, useState} from 'react'
 import {FilePond, registerPlugin} from 'react-filepond'
+import {readFile} from '@/utils/fileUtils'
 
 registerPlugin(FilePondPluginFileValidateType)
 
@@ -44,14 +45,6 @@ const XmlInput = () => {
 
     if (isProcessing.current) return
     isProcessing.current = true
-
-    const readFile = (file: File): Promise<string> =>
-      new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = e => resolve(e.target?.result as string)
-        reader.onerror = e => reject(e)
-        reader.readAsText(file)
-      })
 
     try {
       for (const f of files) {

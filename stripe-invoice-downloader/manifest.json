@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Stripe Invoice Auto-Downloader",
+  "version": "1.0",
+  "description": "Automatically downloads Stripe invoices when visiting any page containing Stripe invoice links",
+  "permissions": [
+    "downloads",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://pay.stripe.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+} 
