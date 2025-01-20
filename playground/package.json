@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@google-cloud/speech": "^6.7.0",
+    "@google/generative-ai": "^0.21.0",
     "dotenv": "^16.4.5",
     "elevenlabs": "^0.6.0",
     "imagekit": "^5.0.1",

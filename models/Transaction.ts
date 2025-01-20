@@ -6,4 +6,5 @@ export interface Transaction {
   description_clean?: string
   currency: string
   type: 'debit' | 'credit'
+  perso?: boolean
 }

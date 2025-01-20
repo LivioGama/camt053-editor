@@ -7,31 +7,21 @@ import {useCamt053} from '@/hooks/useCamt053'
 import {Transaction} from '@/models/Transaction'
 import Store from '@/store/store'
 import {format} from '@/utils/formatter'
-import {
-  Badge,
-  Box,
-  Heading,
-  HStack,
-  IconButton,
-  Separator,
-  Stack,
-  useBreakpointValue,
-  VStack,
-} from '@chakra-ui/react'
+import {Badge, Box, Heading, HStack, Separator, Stack, VStack} from '@chakra-ui/react'
 import groupBy from 'lodash/groupBy'
 import sortBy from 'lodash/sortBy'
 import sumBy from 'lodash/sumBy'
 import {useCallback, useMemo} from 'react'
-import {AiOutlineDelete} from 'react-icons/ai'
 import {observer} from '@legendapp/state/react'
 
 const TransactionList = observer(() => {
-  const {transactions, removeTransaction, removeMultipleTransactions} = useCamt053()
+  const {transactions} = useCamt053()
   const showOnlyCredit = Store.showOnlyCredit.get()
   const limitToYear = Store.limitToYear.get()
   const treatedMonths = Store.treatedMonths.get()
   const projectedRevenue = Store.projectedRevenue.get()
-  const isMobile = useBreakpointValue({base: true, md: false})
+  const showOnlyProExpenses = Store.showOnlyProExpenses.get()
+  const showOnlyPersoExpenses = Store.showOnlyPersoExpenses.get()
 
   const yearFilteredTransactions = useMemo(
     () =>
@@ -44,16 +34,20 @@ const TransactionList = observer(() => {
 
   const listFilteredTransactions = useMemo(
     () =>
-      yearFilteredTransactions.filter(
-        transaction => !(showOnlyCredit && transaction.type !== 'debit'),
+      yearFilteredTransactions.filter(transaction =>
+        !showOnlyCredit || transaction.type === 'debit'
+          ? !showOnlyProExpenses || !transaction.perso
+            ? !(showOnlyPersoExpenses && !transaction.perso)
+            : false
+          : false,
       ),
-    [yearFilteredTransactions, showOnlyCredit],
+    [yearFilteredTransactions, showOnlyCredit, showOnlyProExpenses, showOnlyPersoExpenses],
   )
 
   const groupedTransactions = groupBy(listFilteredTransactions, (transaction: Transaction) => {
     const date = new Date(transaction.date)
     return `${date.toLocaleString('default', {month: 'long'})} ${date.getFullYear()}`
-  }) as Record<string, Transaction[]>
+  })
 
   const sortedGroupedTransactions = sortBy(Object.entries(groupedTransactions), ([date]) =>
     new Date(date).getTime(),
@@ -92,81 +86,89 @@ const TransactionList = observer(() => {
           onCheckedChange={() => Store.showOnlyCredit.toggle()}>
           Show only credit
         </Switch>
+        <Switch
+          mb={4}
+          checked={showOnlyProExpenses}
+          onCheckedChange={() => {
+            Store.showOnlyProExpenses.toggle()
+            if (!showOnlyProExpenses) {
+              Store.showOnlyPersoExpenses.$ = false
+            }
+          }}>
+          Show only pro expenses
+        </Switch>
+        <Switch
+          mb={4}
+          checked={showOnlyPersoExpenses}
+          onCheckedChange={() => {
+            Store.showOnlyPersoExpenses.toggle()
+            if (!showOnlyPersoExpenses) {
+              Store.showOnlyProExpenses.$ = false
+            }
+          }}>
+          Show only personal expenses
+        </Switch>
       </HStack>
       <Separator />
 
       {sortedGroupedTransactions.map(([monthYear, transactions]) => (
         <Box key={monthYear} mb={6} borderRadius='lg' border='dashed 3px lightgray' p={5}>
-          <Separator />
-          <Stack
-            justifyContent='space-between'
-            alignItems='center'
-            p={6}
-            bg='gray.900'
-            mb={4}
-            borderRadius='lg'>
-            <Stack flexDirection={{base: 'column', md: 'row'}} alignItems='center' gap={4} w='full'>
-              <Heading size={{base: 'sm', md: 'lg'}}>{monthYear}</Heading>
-              <HStack w='full'>
-                <HStack gap={{base: 2, md: 4}} w='full' alignItems='stretch'>
-                  <Stack flexDirection={{base: 'column', md: 'row'}}>
-                    <Badge>{transactions.length} transactions</Badge>
-                    <Badge variant='solid' size={{base: 'sm', md: 'lg'}} colorPalette='green'>
-                      {format(
-                        sumBy(
-                          transactions.filter(t => t.type === 'debit'),
-                          'amount',
-                        ),
-                        'CHF',
-                      )}
-                    </Badge>
-                    <Badge variant='solid' size={{base: 'sm', md: 'lg'}} colorPalette='red'>
-                      {format(
-                        sumBy(
-                          transactions.filter(t => t.type === 'credit'),
-                          'amount',
-                        ),
-                        'CHF',
-                      )}
-                    </Badge>
+          <Box position='sticky' top={8} zIndex={2} bg='gray.800'>
+            <Separator />
+            <Stack
+              justifyContent='space-between'
+              alignItems='center'
+              p={6}
+              bg='gray.900'
+              mb={4}
+              borderRadius='lg'>
+              <Stack
+                flexDirection={{base: 'column', md: 'row'}}
+                alignItems='center'
+                gap={4}
+                pr={48}
+                w='full'>
+                <Heading size={{base: 'sm', md: 'lg'}}>{monthYear}</Heading>
+                <HStack w='full'>
+                  <HStack gap={{base: 2, md: 4}} w='full' alignItems='stretch'>
+                    <Stack flexDirection={{base: 'column', md: 'row'}}>
+                      <Badge>{transactions.length} transactions</Badge>
+                      <Badge variant='solid' size={{base: 'sm', md: 'lg'}} colorPalette='green'>
+                        {format(
+                          sumBy(
+                            transactions.filter(t => t.type === 'debit'),
+                            'amount',
+                          ),
+                          'CHF',
+                        )}
+                      </Badge>
+                      <Badge variant='solid' size={{base: 'sm', md: 'lg'}} colorPalette='red'>
+                        {format(
+                          sumBy(
+                            transactions.filter(t => t.type === 'credit'),
+                            'amount',
+                          ),
+                          'CHF',
+                        )}
+                      </Badge>
+                    </Stack>
+                  </HStack>
+                  <Stack flexDirection={{base: 'column', md: 'row'}} gap={4}>
+                    <Switch
+                      ml={4}
+                      checked={treatedMonths.includes(monthYear)}
+                      onCheckedChange={() => handleToggleTreatedMonth(monthYear)}>
+                      Treated
+                    </Switch>
                   </Stack>
                 </HStack>
-                <Stack flexDirection={{base: 'column', md: 'row'}} gap={4}>
-                  <Switch
-                    ml={4}
-                    checked={treatedMonths.includes(monthYear)}
-                    onCheckedChange={() => handleToggleTreatedMonth(monthYear)}>
-                    Treated
-                  </Switch>
-                  <IconButton
-                    colorPalette='red'
-                    aria-label='Delete All'
-                    onClick={async () => {
-                      if (
-                        window.confirm(
-                          `Are you sure you want to delete all transactions for ${monthYear}?`,
-                        )
-                      ) {
-                        const transactionIds = transactions.map(t => t.id)
-                        await removeMultipleTransactions(transactionIds)
-                      }
-                    }}
-                    colorScheme='red'
-                    size='sm'>
-                    <AiOutlineDelete />
-                  </IconButton>
-                </Stack>
-              </HStack>
+              </Stack>
             </Stack>
-          </Stack>
+          </Box>
           {!treatedMonths.includes(monthYear) && (
             <VStack gap={4} align='stretch'>
               {sortBy(transactions, 'date').map((transaction: Transaction) => (
-                <TransactionCell
-                  key={transaction.id}
-                  transaction={transaction}
-                  onClick={() => removeTransaction(transaction.id)}
-                />
+                <TransactionCell key={transaction.id} transaction={transaction} />
               ))}
             </VStack>
           )}

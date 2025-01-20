@@ -3,36 +3,33 @@ import {Transaction} from '@/models/Transaction'
 import {generateCamt053XmlFile, parseCAMT} from '@/utils/camtUtil'
 import pb from '@/utils/pb'
 import isEmpty from 'lodash/isEmpty'
-import {useCallback, useState} from 'react'
-import useAsyncEffect from 'use-async-effect'
+import {useCallback, useEffect} from 'react'
 import dayjs from 'dayjs'
+import {useQuery, useQueryClient} from '@tanstack/react-query'
 
 export const useCamt053 = () => {
-  const [transactions, setTransactions] = useState([])
+  const queryClient = useQueryClient()
 
-  useAsyncEffect(async () => {
-    const unsubscribe = pb.collection('transactions').subscribe('*', e => {
-      setTransactions(prevTransactions => {
-        switch (e.action) {
-          case 'create':
-            return [...prevTransactions, e.record]
-          case 'update':
-            if (e.record.deleted) return prevTransactions.filter(t => t.id !== e.record.id)
-            return prevTransactions.map(t => (t.id === e.record.id ? e.record : t))
-          case 'delete':
-            return prevTransactions.filter(t => t.id !== e.record.id)
-          default:
-            return prevTransactions
-        }
-      })
+  const {data: transactions = []} = useQuery<Transaction[]>({
+    queryKey: ['transactions'],
+    queryFn: () => pb.collection('transactions').getFullList({}),
+  })
+
+  useEffect(() => {
+    const subscription = pb.collection('transactions').subscribe('*', e => {
+      if (e.action === 'create' || e.action === 'delete') {
+        queryClient.invalidateQueries({queryKey: ['transactions']})
+      } else if (e.action === 'update') {
+        queryClient.setQueryData(['transactions'], (oldData: Transaction[]) =>
+          oldData.map(t => (t.id === e.record.id ? e.record : t)),
+        )
+      }
     })
 
-    pb.collection('transactions').getFullList({filter: 'deleted = false'}).then(setTransactions)
-
-    return async () => {
-      ;(await unsubscribe)()
+    return () => {
+      subscription.then(unsub => unsub())
     }
-  }, [])
+  }, [queryClient])
 
   const setXmlContent = useCallback(async (content: string) => {
     const transactions = await pb.collection('transactions').getFullList()
@@ -72,18 +69,25 @@ export const useCamt053 = () => {
     [],
   )
 
-  const removeMultipleTransactions = (transactionIds: string[]) =>
+  const moveMultipleTransactionsTo = (mode, transactionIds: string[]) =>
     Promise.allSettled(
-      transactionIds.map(id => pb.collection('transactions').update(id, {deleted: true})),
+      transactionIds.map(id => pb.collection('transactions').update(id, {perso: mode === 'perso'})),
     )
 
   const generateCamt053Xml = useCallback(() => generateCamt053XmlFile(transactions), [transactions])
+
+  const updateTransaction = useCallback(
+    (id: string, transaction: Partial<Transaction>) =>
+      pb.collection('transactions').update(id, transaction),
+    [],
+  )
 
   return {
     setXmlContent,
     removeTransaction,
     transactions,
     generateCamt053Xml,
-    removeMultipleTransactions,
+    moveMultipleTransactionsTo,
+    updateTransaction,
   }
 }

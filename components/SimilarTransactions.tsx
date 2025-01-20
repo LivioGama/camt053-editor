@@ -12,11 +12,10 @@ import {
 import {useCamt053} from '@/hooks/useCamt053'
 import {Transaction} from '@/models/Transaction'
 import {format} from '@/utils/formatter'
-import {Button, Flex, Input} from '@chakra-ui/react'
+import {Button, Flex, HStack, Input, Text} from '@chakra-ui/react'
 import isEmpty from 'lodash/isEmpty'
 import sumBy from 'lodash/sumBy'
 import {useMemo, useState} from 'react'
-import {AiOutlineDelete} from 'react-icons/ai'
 
 export const SimilarTransactions = ({
   transactions,
@@ -25,7 +24,7 @@ export const SimilarTransactions = ({
   transactions: Transaction[]
   showOnlyCredit: boolean
 }) => {
-  const {removeTransaction, removeMultipleTransactions} = useCamt053()
+  const {removeTransaction, moveMultipleTransactionsTo} = useCamt053()
   const [searchTerm, setSearchTerm] = useState('')
 
   const filteredTransactions = useMemo(
@@ -40,22 +39,23 @@ export const SimilarTransactions = ({
     [transactions, searchTerm, showOnlyCredit],
   )
 
-  const handleRemoveAllFiltered = async () => {
+  const toggleMultipleTo = async (mode: 'perso' | 'pro') => {
     if (
       window.confirm(
-        `Are you sure you want to delete all ${filteredTransactions.length} filtered transactions?`,
+        `Are you sure you want to move all the transaction to ${filteredTransactions.length} "${mode}"?`,
       )
     ) {
       const transactionIds = filteredTransactions.map(t => t.id)
-      await removeMultipleTransactions(transactionIds)
+      await moveMultipleTransactionsTo(mode, transactionIds)
       setSearchTerm('')
     }
   }
+
   return (
-    <DrawerRoot size='xl'>
+    <DrawerRoot size='xl' onOpenChange={details => !details.open && setSearchTerm('')}>
       <DrawerBackdrop />
       <DrawerTrigger asChild>
-        <Button variant='outline' size='sm' pos='fixed' right={4} top={4}>
+        <Button variant='outline' size='sm' pos='fixed' right={14} top={10} zIndex={1000}>
           Search similar transactions
         </Button>
       </DrawerTrigger>
@@ -64,36 +64,49 @@ export const SimilarTransactions = ({
           <DrawerTitle>Search similar transactions</DrawerTitle>
         </DrawerHeader>
         <DrawerBody>
-          <Flex mb={4} alignItems='center'>
+          <Flex mb={4} alignItems='center' justifyContent='space-between'>
             <Input
+              maxW={250}
               placeholder='Search transactions...'
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               mr={2}
             />
             {!isEmpty(searchTerm) && (
-              <Button
-                onClick={() => handleRemoveAllFiltered()}
-                colorPalette='red'
-                disabled={isEmpty(filteredTransactions)}
-                ml={2}>
-                <AiOutlineDelete />
-                Remove all filtered ({filteredTransactions.length} transactions -{' '}
-                {format(
-                  sumBy(filteredTransactions, 'amount'),
-                  isEmpty(filteredTransactions) ? 'CHF' : filteredTransactions[0].currency,
-                )}
-                )
-              </Button>
+              <HStack flex={1}>
+                <Text flex={1} textAlign='center'>
+                  {filteredTransactions.length} transactions{' '}
+                  {format(
+                    sumBy(filteredTransactions, 'amount'),
+                    isEmpty(filteredTransactions) ? 'CHF' : filteredTransactions[0].currency,
+                  )}
+                </Text>
+                <Button
+                  onClick={() => toggleMultipleTo('perso')}
+                  bg='#52832A'
+                  color='white'
+                  disabled={
+                    isEmpty(filteredTransactions) || filteredTransactions.every(t => t.perso)
+                  }
+                  ml={2}>
+                  Convert all to perso
+                </Button>
+                <Button
+                  onClick={() => toggleMultipleTo('pro')}
+                  bg='#31709E'
+                  color='white'
+                  disabled={
+                    isEmpty(filteredTransactions) || filteredTransactions.every(t => !t.perso)
+                  }
+                  ml={2}>
+                  Convert all to pro
+                </Button>
+              </HStack>
             )}
           </Flex>
           {!isEmpty(searchTerm) &&
             filteredTransactions.map(transaction => (
-              <TransactionCell
-                key={transaction.id}
-                transaction={transaction}
-                onClick={() => removeTransaction(transaction.id)}
-              />
+              <TransactionCell key={transaction.id} transaction={transaction} />
             ))}
         </DrawerBody>
         <DrawerCloseTrigger />
