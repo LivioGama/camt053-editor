@@ -57,3 +57,5 @@ sentry.properties
 .pnpm-debug.log
 pocketbase/pb_data
 !pocketbase/pb_data/types.d.ts
+results.json
+processed-issuers.json

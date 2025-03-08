@@ -29,7 +29,7 @@ export const TransactionCell = ({transaction}: {transaction: any}) => {
               variant='solid'
               size={transaction.amount > 200 ? 'lg' : 'sm'}
               colorPalette={
-                parseFloat(transaction.amount) && transaction.type === 'debit' ? 'green' : 'red'
+                parseFloat(transaction.amount) && transaction.type === 'debit' ? 'red' : 'green'
               }>
               {format(transaction.amount, transaction.currency)}
             </Badge>
